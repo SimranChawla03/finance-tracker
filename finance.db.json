@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Siddhant Badkas",
+      "email": "siddhant@gmail.com",
+      "password": "123456"
+    }
+  ],
+  "transactions": [
+    {
+      "id": 1,
+      "user_email": "siddhant@gmail.com",
+      "description": "Rent",
+      "amount": 15000,
+      "type": "expense",
+      "created_at": "24 Sept 2026, 11:35 am"
+    },
+    {
+      "id": 2,
+      "user_email": "siddhant@gmail.com",
+      "description": "salary",
+      "amount": 50000,
+      "type": "income",
+      "created_at": "24 Sept 2026, 11:35 am"
+    }
+  ],
+  "nextUserId": 2,
+  "nextTxnId": 3
+}

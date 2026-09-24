@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — FinanceTracker</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">FinanceTracker</div>
+
+      <div class="sidebar-section-label">Menu</div>
+
+      <a class="nav-item active" onclick="showPage('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+      <a class="nav-item" onclick="showPage('transactions')">
+        <span class="nav-icon">↕️</span> Transactions
+      </a>
+      <a class="nav-item" onclick="showPage('analytics')">
+        <span class="nav-icon">📊</span> Analytics
+      </a>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-user">
+          <div class="user-avatar" id="avatarInitial">U</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebarName">Loading...</div>
+            <div class="user-role">Personal Account</div>
+          </div>
+        </div>
+        <a href="login.html" class="logout-btn" onclick="logoutUser()">
+          <span>🚪</span> Sign Out
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+      <!-- ==================== DASHBOARD PAGE ==================== -->
+      <div id="page-dashboard" class="page-enter">
+        <div class="topbar">
+          <div class="page-title">Dashboard</div>
+          <div class="topbar-right">
+            <span class="date-badge" id="currentDate"></span>
+          </div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats-row">
+          <div class="stat-card income">
+            <div class="stat-icon">💚</div>
+            <div class="stat-label">Total Income</div>
+            <div class="stat-amount" id="statIncome">₹0</div>
+          </div>
+          <div class="stat-card expense">
+            <div class="stat-icon">🔴</div>
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-amount" id="statExpense">₹0</div>
+          </div>
+          <div class="stat-card balance">
+            <div class="stat-icon">💜</div>
+            <div class="stat-label">Net Balance</div>
+            <div class="stat-amount" id="statBalance">₹0</div>
+          </div>
+        </div>
+
+        <!-- ADD TRANSACTION + CHART -->
+        <div class="dashboard-grid">
+
+          <div>
+            <!-- ADD TRANSACTION FORM -->
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title"><span class="dot"></span> Add Transaction</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Description</label>
+                  <input id="desc" placeholder="e.g. Salary, Groceries..." class="form-select" style="appearance:auto;background-image:none;">
+                </div>
+                <div class="form-group">
+                  <label>Amount (₹)</label>
+                  <input id="amount" type="number" placeholder="0.00" min="0" class="form-select" style="appearance:auto;background-image:none;">
+                </div>
+                <div class="form-group">
+                  <label>Type</label>
+                  <select id="type" class="form-select">
+                    <option value="income">💚 Income</option>
+                    <option value="expense">🔴 Expense</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top:14px">
+                <button class="add-btn" onclick="addTransaction()">+ Add Transaction</button>
+              </div>
+            </div>
+
+            <!-- LINE CHART -->
+            <div class="card chart-section">
+              <div class="card-title"><span class="dot"></span> Monthly Trend</div>
+              <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#5ee7b7"></div>
+                  Income
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#f76f6f"></div>
+                  Expense
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECENT TRANSACTIONS -->
+          <div class="card transactions-card">
+            <div class="card-title"><span class="dot"></span> Recent Transactions</div>
+            <div class="txn-filter">
+              <button class="txn-filter-btn active" onclick="filterTxns('all', this)">All</button>
+              <button class="txn-filter-btn" onclick="filterTxns('income', this)">Income</button>
+              <button class="txn-filter-btn" onclick="filterTxns('expense', this)">Expenses</button>
+            </div>
+            <ul class="txn-list" id="transactionList">
+              <div class="empty-state">
+                <div class="empty-icon">💸</div>
+                <p>No transactions yet.<br>Add your first one!</p>
+              </div>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ==================== TRANSACTIONS PAGE ==================== -->
+      <div id="page-transactions" style="display:none">
+        <div class="topbar">
+          <div class="page-title">All Transactions</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="dot"></span> Transaction History</div>
+          <div class="txn-filter" style="margin-bottom:16px">
+            <button class="txn-filter-btn active" onclick="filterTxnsPage('all', this)">All</button>
+            <button class="txn-filter-btn" onclick="filterTxnsPage('income', this)">Income</button>
+            <button class="txn-filter-btn" onclick="filterTxnsPage('expense', this)">Expenses</button>
+          </div>
+          <ul class="txn-list" id="allTransactionList" style="max-height:600px"></ul>
+        </div>
+      </div>
+
+      <!-- ==================== ANALYTICS PAGE ==================== -->
+      <div id="page-analytics" style="display:none">
+        <div class="topbar">
+          <div class="page-title">Analytics</div>
+        </div>
+
+        <div class="stats-row" style="margin-bottom:28px">
+          <div class="stat-card income">
+            <div class="stat-label">Total Income</div>
+            <div class="stat-amount" id="aStatIncome">₹0</div>
+          </div>
+          <div class="stat-card expense">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-amount" id="aStatExpense">₹0</div>
+          </div>
+          <div class="stat-card balance">
+            <div class="stat-label">Savings Rate</div>
+            <div class="stat-amount" id="aStatSavings">0%</div>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+
+          <!-- DONUT CHART -->
+          <div class="card">
+            <div class="card-title"><span class="dot"></span> Income vs Expense</div>
+            <div class="chart-container" style="height:240px">
+              <canvas id="donutChart"></canvas>
+            </div>
+          </div>
+
+          <!-- BAR CHART -->
+          <div class="card">
+            <div class="card-title"><span class="dot"></span> Transaction Breakdown</div>
+            <div class="chart-container" style="height:240px">
+              <canvas id="barChart"></canvas>
+            </div>
+          </div>
+
+          <!-- SPENDING SUMMARY -->
+          <div class="card" style="grid-column: 1 / -1">
+            <div class="card-title"><span class="dot"></span> Recent Activity Summary</div>
+            <ul class="category-list" id="analyticsList"></ul>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <span class="toast-icon"></span>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
