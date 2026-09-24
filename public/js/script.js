@@ -2,6 +2,8 @@
    FinanceTracker — Complete Client Script
    =========================================== */
 
+const API = 'https://finance-tracker-3ok4.onrender.com';
+
 /* ---- UTILS ---- */
 
 function formatCurrency(n) {
@@ -59,7 +61,7 @@ function signupUser() {
   if (password.length < 6)          { err.textContent = 'Password must be at least 6 characters.'; return; }
   err.textContent = '';
 
-  fetch('/signup', {
+  fetch(API + '/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password })
@@ -72,7 +74,7 @@ function signupUser() {
       err.textContent = data.message || 'Signup failed.';
     }
   })
-  .catch(() => { err.textContent = 'Cannot reach server. Make sure you ran: node server.js'; });
+  .catch(() => { err.textContent = 'Cannot reach server. Try again in 30 seconds (server waking up).'; });
 }
 
 /* ---- AUTH: LOGIN ---- */
@@ -85,7 +87,7 @@ function loginUser() {
   if (!email || !password) { err.textContent = 'Please fill in all fields.'; return; }
   err.textContent = '';
 
-  fetch('/login', {
+  fetch(API + '/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -100,7 +102,7 @@ function loginUser() {
       err.textContent = data.message || 'Invalid email or password.';
     }
   })
-  .catch(() => { err.textContent = 'Cannot reach server. Make sure you ran: node server.js'; });
+  .catch(() => { err.textContent = 'Cannot reach server. Try again in 30 seconds (server waking up).'; });
 }
 
 /* ---- AUTH GUARD ---- */
@@ -121,9 +123,9 @@ function logoutUser() {
 /* ---- LOAD USER INFO ---- */
 
 function loadUser() {
-  const name    = localStorage.getItem('username') || 'User';
-  const nameEl  = document.getElementById('sidebarName');
-  const avatarEl= document.getElementById('avatarInitial');
+  const name     = localStorage.getItem('username') || 'User';
+  const nameEl   = document.getElementById('sidebarName');
+  const avatarEl = document.getElementById('avatarInitial');
   if (nameEl)   nameEl.textContent   = name;
   if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
 }
@@ -136,10 +138,9 @@ function showPage(page) {
     if (el) el.style.display = (p === page) ? 'block' : 'none';
   });
 
-  document.querySelectorAll('.nav-item').forEach(el => {
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
     const pages = ['dashboard','transactions','analytics'];
-    const idx   = Array.from(document.querySelectorAll('.nav-item')).indexOf(el);
-    el.classList.toggle('active', pages[idx] === page);
+    el.classList.toggle('active', pages[i] === page);
   });
 
   if (page === 'analytics')    renderAnalytics();
@@ -173,10 +174,10 @@ function addTransaction() {
   const type   = document.getElementById('type').value;
   const email  = localStorage.getItem('userEmail');
 
-  if (!desc)            { showToast('Please enter a description.', 'error'); return; }
+  if (!desc)             { showToast('Please enter a description.', 'error'); return; }
   if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'error'); return; }
 
-  fetch('/addTransaction', {
+  fetch(API + '/addTransaction', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, description: desc, amount, type })
@@ -192,7 +193,7 @@ function addTransaction() {
       showToast(data.message || 'Failed to add.', 'error');
     }
   })
-  .catch(() => showToast('Server error.', 'error'));
+  .catch(() => showToast('Server error. Try again.', 'error'));
 }
 
 /* ---- DELETE TRANSACTION ---- */
@@ -201,7 +202,7 @@ function deleteTransaction(id) {
   const email = localStorage.getItem('userEmail');
   if (!confirm('Delete this transaction?')) return;
 
-  fetch('/deleteTransaction', {
+  fetch(API + '/deleteTransaction', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, email })
@@ -226,14 +227,13 @@ function loadTransactions() {
   const email = localStorage.getItem('userEmail');
   if (!email) return;
 
-  fetch('/getTransactions', {
+  fetch(API + '/getTransactions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email })
   })
   .then(r => r.json())
   .then(data => {
-    // data rows: [description, amount, type, created_at, id]
     allTransactions = data.map(row => ({
       id:          row[4],
       description: row[0],
@@ -346,7 +346,6 @@ function renderLineChart() {
   const canvas = document.getElementById('lineChart');
   if (!canvas || typeof Chart === 'undefined') return;
 
-  // Group into up to 7 buckets
   const n     = allTransactions.length;
   const chunk = Math.max(1, Math.ceil(n / 7));
   const incomeData = [], expenseData = [], labels = [];
@@ -414,7 +413,6 @@ function renderAnalytics() {
     else                      expense += t.amount;
   });
 
-  /* Donut */
   const donutCanvas = document.getElementById('donutChart');
   if (donutCanvas) {
     if (donutInstance) donutInstance.destroy();
@@ -441,7 +439,6 @@ function renderAnalytics() {
     });
   }
 
-  /* Bar chart — top 7 by amount */
   const barCanvas = document.getElementById('barChart');
   if (barCanvas) {
     const top = [...allTransactions].sort((a,b) => b.amount - a.amount).slice(0,7);
@@ -472,7 +469,6 @@ function renderAnalytics() {
     });
   }
 
-  /* Progress list */
   const listEl = document.getElementById('analyticsList');
   if (listEl) {
     if (allTransactions.length === 0) {
